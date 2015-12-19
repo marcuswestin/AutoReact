@@ -1,0 +1,30 @@
+{
+  "name": "autoreact",
+  "version": "0.0.0",
+  "description": "Automatic state/view dependency management",
+  "main": "src/AutoReact.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcuswestin/AutoReact.git"
+  },
+  "author": "Marcus Westin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/marcuswestin/AutoReact/issues"
+  },
+  "homepage": "https://github.com/marcuswestin/AutoReact#readme",
+  "dependencies": {
+    "lodash": "^3.10.1",
+    "react": "^0.14.3",
+    "react-addons-pure-render-mixin": "^0.14.3",
+    "react-dom": "^0.14.3"
+  },
+  "devDependencies": {
+    "browserify": "^12.0.1",
+    "budo": "^7.0.4",
+    "es6ify": "^1.6.0",
+  }
+}
