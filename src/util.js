@@ -1,5 +1,7 @@
-var {defaults, noop, each, map, assign, isFunction, isArray, isArguments, isObject} = require('lodash')
-export {defaults, noop, each, map, assign, isFunction, isArray, isArguments, isObject}
+var    {uniq, defaults, noop, each, map, assign} = require('lodash')
+export {uniq, defaults, noop, each, map, assign}
+var    {isFunction, isArray, isArguments, isObject, isPlainObject, isString, isNumber} = require('lodash')
+export {isFunction, isArray, isArguments, isObject, isPlainObject, isString, isNumber}
 
 export function Class(props) {
 	function Constructor() {}

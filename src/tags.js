@@ -1,3 +1,5 @@
+var React = require('react')
+
 import {each, map, assign, isFunction, isArray, isArguments, isObject} from './util'
 
 export function makeGlobalTags(tags) {
@@ -25,11 +27,7 @@ export function makeTag(tagName) {
 			} else if (isArray(val) || isArguments(val)) {
 				each(val, processArg)
 			} else if (isObject(val)) {
-				if (Layout.isLayout(val)) {
-					assign(props.style, val._styles)
-				} else {
-					assign(props, val)
-				}
+				assign(props, val)
 			} else if (val !== undefined) {
 				children.push(val)
 			}
@@ -38,4 +36,11 @@ export function makeTag(tagName) {
 		var args = [tagName, props].concat(children)
 		return React.createElement.apply(React, args)
 	}
+}
+
+function isReactObj(arg) {
+	return arg && !!(
+		arg['$$typeof'] || // v0.14.0
+		arg._isReactElement // v0.13.3.0
+	)
 }
