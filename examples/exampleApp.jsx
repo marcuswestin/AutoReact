@@ -1,3 +1,4 @@
+// Next: Performance tests
 // ??? Prevent UIState objects from being passed to components?
 // SHOULD WORK BETTER WITH FLUX:
 // 		A single store keeps app state.
@@ -22,7 +23,8 @@ var UIState = AutoReact.DeclareUIState({
 		LastMessage: String,
 		Messages: Array({
 			From: String,
-			Text: String
+			Text: String,
+			Time: Number
 		})
 	})
 })
@@ -57,7 +59,8 @@ var store = (function() {
 		addMessage: function(text) {
 			UIState.Rooms[UIState.CurrentRoomIndex].Messages.push({
 				From: UIState.Username,
-				Text: text
+				Text: text,
+				Time: new Date().getTime()
 			})
 			// Alt 1:
 			// rooms[UIState.CurrentRoomIndex].Messages.push({ From: UIState.Username, Text: text })
@@ -103,7 +106,7 @@ var RoomListView = AutoReact.View({
 	render: function() {
 		return <div>
 			{_.map(UIState.Rooms, function(Room, roomIndex) {
-				return <RoomView roomIndex={roomIndex}/>
+				return <RoomView key={Room.Name} roomIndex={roomIndex} />
 			})}
 		</div>
 	}
@@ -130,7 +133,9 @@ var ChatView = AutoReact.View({
 		}
 		return <div>
 			{_.map(Room.Messages, (message) =>
-				<div>{message.From}: {message.Text}</div>
+				<div key={message.Time}>
+					{message.From}: {message.Text}
+				</div>
 			)}
 			<input id='messageInput' onKeyPress={this.onKeyPress} />
 		</div>
