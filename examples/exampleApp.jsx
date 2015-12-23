@@ -4,6 +4,10 @@
 // 		A single UIState keeps UI state.
 // 		Store updates UIState
 // Try to bind a UIState value with an input field
+// Should the store perhaps grab a mutable copy of UIState?
+// 		Pro: clarity.
+// 		Con: prevents easy prototoyping without a store.
+// 		Pro: can seemingly explain the magic a bit?
 
 var ReactDOM = require('react-dom')
 var AutoReact = require('../es6')
@@ -13,38 +17,53 @@ var _ = require('lodash')
 var UIState = AutoReact.DeclareUIState({
 	Username: String,
 	CurrentRoomIndex: Number,
-	Rooms: [{
+	Rooms: Array({
 		Name: String,
 		LastMessage: String,
-		Messages: [{
+		Messages: Array({
 			From: String,
 			Text: String
-		}]
-	}]
+		})
+	})
 })
-UIState.Rooms = []
 
 var store = (function() {
-	var rooms = []
+	// Setup
+	////////
+	UIState.Rooms = []
+	
+	// Transformations
+	///////////////////
 	return {
 		setUsername: function(username) {
 			UIState.Username = username
 		},
 		addRoom: function(name) {
-			rooms.push({ LastMessage:null, Messages:[], Name:name })
-			UIState.Rooms = rooms
+			UIState.Rooms.push({
+				LastMessage:null,
+				Messages:[],
+				Name:name
+			})
+			// Alt 1:
+			// rooms.push({ LastMessage:null, Messages:[], Name:name })
+			// UIState.Rooms = rooms
+			
+			// Alt 2:
 			// // TODO: This works if preventMutation is removed.
 			// How can we make it work without `UIState.Rooms = UIState.Rooms`?
 			// UIState.Rooms.push({ LastMessage:null, Messages:[], Name:name })
 			// UIState.Rooms = UIState.Rooms
 		},
 		addMessage: function(text) {
-			rooms[UIState.CurrentRoomIndex].Messages.push({
+			UIState.Rooms[UIState.CurrentRoomIndex].Messages.push({
 				From: UIState.Username,
 				Text: text
 			})
+			// Alt 1:
+			// rooms[UIState.CurrentRoomIndex].Messages.push({ From: UIState.Username, Text: text })
 			// UGLY
-			UIState.Rooms[UIState.CurrentRoomIndex].Messages = rooms[UIState.CurrentRoomIndex].Messages
+			// UIState.Rooms[UIState.CurrentRoomIndex].Messages = rooms[UIState.CurrentRoomIndex].Messages
+			// Alt 2:
 		},
 		selectRoom: function(roomIndex) {
 			UIState.CurrentRoomIndex = roomIndex

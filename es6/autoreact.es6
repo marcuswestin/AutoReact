@@ -5,7 +5,8 @@ import _ from 'lodash'
 import { Class, wrapFunction, assert } from './util'
 
 export function DeclareUIState(schema) {
-	return newUIState(schema, {})
+	assert(_.isPlainObject(schema))
+	return newUIState(schema, {}, null)
 }
 
 export function View(args) {
@@ -69,8 +70,12 @@ function newView(args) {
 // UIState
 //////////
 
-function newUIState(schema, value) {
+function newUIState(schema, value, parent) {
 	if (isAutoState(value)) {
+		// If a UIState property P is being set to a UIState object V
+		// then we don't want the dependants of V to transfer over to be dependant
+		// on P. Thus, create a new UIState object with the same underlying
+		// value as V.
 		value = value.__value
 	}
 	
@@ -92,30 +97,64 @@ function newUIState(schema, value) {
 	} else if (_.isArray(schema)) {
 		assert(_.isArray(value))
 		var arrayItemSchema = schema[0]
-		return newArrayState(arrayItemSchema, value)
+		return newArrayState(arrayItemSchema, value, parent)
 	
 	} else if (_.isPlainObject(schema)) {
 		assert(_.isPlainObject(value))
-		return newObjectState(schema, value)
+		return newObjectState(schema, value, parent)
 
 	} else {
 		throw new Error('Unknown schema type')
 	}
 }
 
-function newArrayState(arrayItemSchema, arr) {
-	var result = _.map(arr, function(itemValue) {
-		return newUIState(arrayItemSchema, itemValue)
+function newArrayState(arrayItemSchema, arr, parent) {
+	var arr = _.map(arr, function(itemValue) {
+		return newUIState(arrayItemSchema, itemValue, parent)
+	})
+	bubbleMutation(arr, 'push', arrayItemSchema, parent, function(arr) {
+		return [arr.length - 1]
+	})
+	bubbleMutation(arr, 'pop', arrayItemSchema, parent, function(arr) {
+		return []
+	})
+	bubbleMutation(arr, 'shift', arrayItemSchema, parent, function(arr) {
+		return []
+	})
+	bubbleMutation(arr, 'unshift', arrayItemSchema, parent, function(arr) {
+		return [0]
+	})
+	bubbleMutation(arr, 'splice', arrayItemSchema, parent, function(arr) {
+		// Can be improved to look only at arguments to splice and only return affected indices
+		return _.map((_, i) => i) // all indices
+	})
+	bubbleMutation(arr, 'reverse', arrayItemSchema, parent, function(arr) {
+		return []
+	})
+	bubbleMutation(arr, 'sort', arrayItemSchema, parent, function(arr) {
+		return _.map((_, i) => i) // all indices
 	})
 	// TODO: Instead of preventing mutation, consider notifying parent UIState object of mutation.
-	result.push = preventMutation
-	result.pop = preventMutation
-	result.shift = preventMutation
-	result.unshift = preventMutation
-	result.splice = preventMutation
-	result.reverse = preventMutation
-	result.sort = preventMutation
-	return result
+	// arr.push = preventMutation
+	// arr.pop = preventMutation
+	// arr.shift = preventMutation
+	// arr.unshift = preventMutation
+	// arr.splice = preventMutation
+	// arr.reverse = preventMutation
+	// arr.sort = preventMutation
+	return arr
+}
+
+function bubbleMutation(arr, fnName, arrayItemSchema, parent, mutatedIndecesFn) {
+	var oldFn = arr[fnName]
+	arr[fnName] = function() {
+		_sweepDependantsAndScheduleRender(parent.stateObj, parent.prop)
+		var res = oldFn.apply(arr, arguments)
+		_.each(mutatedIndecesFn(arr), function(i) {
+			arr[i] = newUIState(arrayItemSchema, arr[i], parent)
+		})
+		return res
+	}
 }
 
 function newObjectState(schema, value) {
@@ -128,14 +167,12 @@ function newObjectState(schema, value) {
 	
 	stateObj.__value = {}
 	_.each(value, function(propValue, propName) {
-		stateObj.__value[propName] = newUIState(schema[propName], propValue) //, name+'.'+propName)
+		stateObj.__value[propName] = newUIState(schema[propName], propValue, { stateObj:stateObj, prop:propName })
 	})
 	_.each(schema, function(_, prop) {
 		stateObj.__dependantUIDs[prop] = []
 		var type = schema[prop]
 		Object.defineProperty(stateObj, prop, {
-			// writable: true,
-			configurable: true,
 			get: function() {
 				if (renderingStack.length) { // We are in a render loop - record that view depends on stateObj[prop]
 					var view = renderingStack[renderingStack.length - 1]
@@ -144,10 +181,9 @@ function newObjectState(schema, value) {
 				return stateObj.__value[prop]
 			},
 			set: function(newPropValue) {
-				assert(!renderingStack.length)
 				_sweepDependantsAndScheduleRender(stateObj, prop)
 				var propSchema = stateObj.__schema[prop]
-				stateObj.__value[prop] = newUIState(propSchema, newPropValue)
+				stateObj.__value[prop] = newUIState(propSchema, newPropValue, { stateObj:stateObj, prop:prop })
 			}
 		})
 	})	
@@ -156,6 +192,7 @@ function newObjectState(schema, value) {
 
 var _scheduledRenders
 function _sweepDependantsAndScheduleRender(stateObj, prop) {
+	assert(!renderingStack.length)
 	if (!_scheduledRenders) {
 		_scheduledRenders = []
 		setTimeout(_runScheduledRenders, 0)
