@@ -6,10 +6,9 @@
 // Try to bind a UIState value with an input field
 
 var ReactDOM = require('react-dom')
-var AutoReact = require('../src/autoreact')
+var AutoReact = require('../es6')
+var React = require('react')
 var _ = require('lodash')
-
-var [div, span, input, button] = AutoReact.makeTags('div,span,input,button'.split(','))
 
 var UIState = AutoReact.DeclareUIState({
 	Username: String,
@@ -59,50 +58,48 @@ var AppView = AutoReact.View({
 		window.gApp = this
 	},
 	render: function() {
-		return div(
-			this.renderControls(),
-			div('Username: ', UIState.Username || '(none)'),
-			RoomListView(),
-			ChatView()
-		)
+		return <div>
+			<div>{ this.renderControls() }</div>
+			<div>Username: { UIState.Username || '(none)' }</div>
+			<RoomListView/>
+			<ChatView/>
+		</div>
 	},
 	renderControls: function() {
-		return div('Controls:',
-			button('Add Room', {
-				onClick: function() {
-					store.addRoom("A Room "+new Date().getTime())
-				}
-			}),
-			button('Set Username', {
-				onClick: function() {
-					store.setUsername(document.getElementById('usernameInput').value)
-				}
-			}),
-			input({ id:'usernameInput' })
-		)
+		return <div>Controls:
+			<button onClick={this.addRoom}>Add Room</button>
+			<button onClick={this.setUsername}>Set Username</button>
+			<input id='usernameInput' />
+		</div>
+	},
+	addRoom: function() {
+		store.addRoom("A Room "+new Date().getTime())
+	},
+	setUsername: function() {
+		store.setUsername(document.getElementById('usernameInput').value)
 	}
 })
 
 var RoomListView = AutoReact.View({
 	render: function() {
-		return div(
-			_.map(UIState.Rooms, function(Room, roomIndex) {
-				return RoomView({ roomIndex:roomIndex })
-			})
-		)
+		return <div>
+			{_.map(UIState.Rooms, function(Room, roomIndex) {
+				return <RoomView roomIndex={roomIndex}/>
+			})}
+		</div>
 	}
 })
 
 var RoomView = AutoReact.View({
 	render: function() {
-		var roomIndex = this.props.roomIndex
-		var isCurrent = (roomIndex == UIState.CurrentRoomIndex)
-		var Room = UIState.Rooms[roomIndex]
-		return div(Room.Name, (isCurrent && ' (current)'),
-			{
-				onClick:function() { store.selectRoom(roomIndex) }
-			}
-		)
+		var Room = UIState.Rooms[this.props.roomIndex]
+		var isCurrent = (this.props.roomIndex == UIState.CurrentRoomIndex)
+		return <div onClick={this.selectRoom}>
+			{Room.Name} {isCurrent && ' (current)'}
+		</div>
+	},
+	selectRoom: function() {
+		store.selectRoom(this.props.roomIndex)
 	}
 })
 
@@ -110,14 +107,14 @@ var ChatView = AutoReact.View({
 	render: function() {
 		var Room = UIState.Rooms[UIState.CurrentRoomIndex]
 		if (!Room) {
-			return div('No room selected')
+			return <div>No room selected</div>
 		}
-		return div(
-			_.map(Room.Messages, function(message) {
-				return div(message.From, ': ', message.Text)
-			}),
-			input({ id:'messageInput', onKeyPress: this.onKeyPress })
-		)
+		return <div>
+			{_.map(Room.Messages, (message) =>
+				<div>{message.From}: {message.Text}</div>
+			)}
+			<input id='messageInput' onKeyPress={this.onKeyPress} />
+		</div>
 	},
 	onKeyPress: function(event) {
 		if (event.key != 'Enter') { return }

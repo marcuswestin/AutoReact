@@ -1,7 +1,4 @@
-var    {uniq, defaults, noop, each, map, assign} = require('lodash')
-export {uniq, defaults, noop, each, map, assign}
-var    {isFunction, isArray, isArguments, isObject, isPlainObject, isString, isNumber} = require('lodash')
-export {isFunction, isArray, isArguments, isObject, isPlainObject, isString, isNumber}
+import _ from 'lodash'
 
 export function Class(props) {
 	function Constructor() {}
@@ -13,7 +10,7 @@ export function Class(props) {
 
 
 export function wrapFunction(obj, fnName, wrapperFn) {
-	var oldFn = obj[fnName] || noop
+	var oldFn = obj[fnName] || _.noop
 	obj[fnName] = function() {
 		return wrapperFn.call(this, oldFn, arguments)
 	}

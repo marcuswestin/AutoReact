@@ -1,11 +1,8 @@
-var React = require('react')
-var PureRenderMixin = require('react-addons-pure-render-mixin')
+import React from 'react'
+import PureRenderMixin from 'react-addons-pure-render-mixin'
+import _ from 'lodash'
 
-import {makeTags, makeGlobalTags} from './tags'
-export {makeTags, makeGlobalTags}
-
-import { map, uniq, each, assert, assign, defaults, wrapFunction, Class } from './util'
-import { isArray, isPlainObject, isString, isNumber, isBool, isFunction } from './util'
+import { Class, wrapFunction, assert } from './util'
 
 export function DeclareUIState(schema) {
 	return newUIState(schema, {})
@@ -57,7 +54,7 @@ function newView(args) {
 		return oldFn.apply(this, args)
 	})
 	
-	defaults(args, {
+	_.defaults(args, {
 		statics: {},
 		getInitialState: function() { return {} },
 		mixins: []
@@ -65,7 +62,7 @@ function newView(args) {
 	if (!args.shouldComponentUpdate) {
 		args.mixins.push(PureRenderMixin)
 	}
-	return assign(React.createFactory(React.createClass(args)), args.statics)
+	return _.assign(React.createFactory(React.createClass(args)), args.statics)
 }
 
 
@@ -81,24 +78,24 @@ function newUIState(schema, value) {
 		// TODO: Add and enfore schema nullability?
 	
 	} else if (schema == String) {
-		assert(isString(value))
+		assert(_.isString(value))
 		return value
 	
 	} else if (schema == Number) {
-		assert(isNumber(value))
+		assert(_.isNumber(value))
 		return value
 	
 	} else if (schema == Function) {
-		assert(isFunction(value))
+		assert(_.isFunction(value))
 		return value
 	
-	} else if (isArray(schema)) {
-		assert(isArray(value))
+	} else if (_.isArray(schema)) {
+		assert(_.isArray(value))
 		var arrayItemSchema = schema[0]
 		return newArrayState(arrayItemSchema, value)
 	
-	} else if (isPlainObject(schema)) {
-		assert(isPlainObject(value))
+	} else if (_.isPlainObject(schema)) {
+		assert(_.isPlainObject(value))
 		return newObjectState(schema, value)
 
 	} else {
@@ -107,7 +104,7 @@ function newUIState(schema, value) {
 }
 
 function newArrayState(arrayItemSchema, arr) {
-	var result = map(arr, function(itemValue) {
+	var result = _.map(arr, function(itemValue) {
 		return newUIState(arrayItemSchema, itemValue)
 	})
 	// TODO: Instead of preventing mutation, consider notifying parent UIState object of mutation.
@@ -130,10 +127,10 @@ function newObjectState(schema, value) {
 	}
 	
 	stateObj.__value = {}
-	each(value, function(propValue, propName) {
+	_.each(value, function(propValue, propName) {
 		stateObj.__value[propName] = newUIState(schema[propName], propValue) //, name+'.'+propName)
 	})
-	each(schema, function(_, prop) {
+	_.each(schema, function(_, prop) {
 		stateObj.__dependantUIDs[prop] = []
 		var type = schema[prop]
 		Object.defineProperty(stateObj, prop, {
@@ -168,7 +165,7 @@ function _sweepDependantsAndScheduleRender(stateObj, prop) {
 	// Descend into nested dependants
 	var value = stateObj.__value[prop]
 	if (isContainer(value)) {
-		each(value, function(_, subProp) {
+		_.each(value, function(_, subProp) {
 			_sweepDependantsAndScheduleRender(stateObj, subProp)
 		})
 	}
@@ -176,8 +173,8 @@ function _sweepDependantsAndScheduleRender(stateObj, prop) {
 	function _runScheduledRenders() {
 		var scheduledRenders = _scheduledRenders
 		_scheduledRenders = null
-		each(scheduledRenders, function(dependantsList) {
-			each(dependantsList, function(viewUID) {
+		_.each(scheduledRenders, function(dependantsList) {
+			_.each(dependantsList, function(viewUID) {
 				if (!obsoleteViewUIDs[viewUID]) {
 					var view = viewComponentsByUid[viewUID]
 					view.forceUpdate()
@@ -195,7 +192,7 @@ function isAutoState(obj) {
 }
 
 function isContainer(obj) {
-	return isArray(obj) || isPlainObject(obj)
+	return _.isArray(obj) || _.isPlainObject(obj)
 }
 
 nextUid._num = 0
