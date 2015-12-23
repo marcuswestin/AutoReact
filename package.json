@@ -1,6 +1,6 @@
 {
   "name": "autoreact",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Automatic state/view dependency management",
   "main": "autoreact.build.js",
   "scripts": {
