@@ -11,7 +11,7 @@
 // 		Pro: can seemingly explain the magic a bit?
 
 var ReactDOM = require('react-dom')
-var AutoReact = require('../es6')
+var AutoReact = require('../src')
 var React = require('react')
 var _ = require('lodash')
 

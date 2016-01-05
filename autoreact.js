@@ -24,7 +24,8 @@ var _lodash2 = _interopRequireDefault(_lodash);
 var _util = require('./util');
 
 function DeclareUIState(schema) {
-	return newUIState(schema, {});
+	(0, _util.assert)(_lodash2['default'].isPlainObject(schema));
+	return newUIState(schema, {}, null);
 }
 
 function View(args) {
@@ -91,8 +92,12 @@ function newView(args) {
 // UIState
 //////////
 
-function newUIState(schema, value) {
+function newUIState(schema, value, parent) {
 	if (isAutoState(value)) {
+		// If a UIState property P is being set to a UIState object V
+		// then we don't want the dependants of V to transfer over to be dependant
+		// on P. Thus, create a new UIState object with the same underlying
+		// value as V.
 		value = value.__value;
 	}
 
@@ -111,28 +116,58 @@ function newUIState(schema, value) {
 		} else if (_lodash2['default'].isArray(schema)) {
 			(0, _util.assert)(_lodash2['default'].isArray(value));
 			var arrayItemSchema = schema[0];
-			return newArrayState(arrayItemSchema, value);
+			return newArrayState(arrayItemSchema, value, parent);
 		} else if (_lodash2['default'].isPlainObject(schema)) {
 			(0, _util.assert)(_lodash2['default'].isPlainObject(value));
-			return newObjectState(schema, value);
+			return newObjectState(schema, value, parent);
 		} else {
 			throw new Error('Unknown schema type');
 		}
 }
 
-function newArrayState(arrayItemSchema, arr) {
-	var result = _lodash2['default'].map(arr, function (itemValue) {
-		return newUIState(arrayItemSchema, itemValue);
+function newArrayState(arrayItemSchema, arr, parent) {
+	var arr = _lodash2['default'].map(arr, function (itemValue) {
+		return newUIState(arrayItemSchema, itemValue, parent);
 	});
-	// TODO: Instead of preventing mutation, consider notifying parent UIState object of mutation.
-	result.push = preventMutation;
-	result.pop = preventMutation;
-	result.shift = preventMutation;
-	result.unshift = preventMutation;
-	result.splice = preventMutation;
-	result.reverse = preventMutation;
-	result.sort = preventMutation;
-	return result;
+	bubbleMutation(arr, 'push', arrayItemSchema, parent, function (arr) {
+		return [arr.length - 1];
+	});
+	bubbleMutation(arr, 'pop', arrayItemSchema, parent, function (arr) {
+		return [];
+	});
+	bubbleMutation(arr, 'shift', arrayItemSchema, parent, function (arr) {
+		return [];
+	});
+	bubbleMutation(arr, 'unshift', arrayItemSchema, parent, function (arr) {
+		return [0];
+	});
+	bubbleMutation(arr, 'splice', arrayItemSchema, parent, function (arr) {
+		// Can be improved to look only at arguments to splice and only return affected indices
+		return _lodash2['default'].map(function (_, i) {
+			return i;
+		}); // all indices
+	});
+	bubbleMutation(arr, 'reverse', arrayItemSchema, parent, function (arr) {
+		return [];
+	});
+	bubbleMutation(arr, 'sort', arrayItemSchema, parent, function (arr) {
+		return _lodash2['default'].map(function (_, i) {
+			return i;
+		}); // all indices
+	});
+	return arr;
+}
+
+function bubbleMutation(arr, fnName, arrayItemSchema, parent, mutatedIndecesFn) {
+	var oldFn = arr[fnName];
+	arr[fnName] = function () {
+		_sweepDependantsAndScheduleRender(parent.stateObj, parent.prop);
+		var res = oldFn.apply(arr, arguments);
+		_lodash2['default'].each(mutatedIndecesFn(arr), function (i) {
+			arr[i] = newUIState(arrayItemSchema, arr[i], parent);
+		});
+		return res;
+	};
 }
 
 function newObjectState(schema, value) {
@@ -145,14 +180,12 @@ function newObjectState(schema, value) {
 
 	stateObj.__value = {};
 	_lodash2['default'].each(value, function (propValue, propName) {
-		stateObj.__value[propName] = newUIState(schema[propName], propValue); //, name+'.'+propName)
+		stateObj.__value[propName] = newUIState(schema[propName], propValue, { stateObj: stateObj, prop: propName });
 	});
 	_lodash2['default'].each(schema, function (_, prop) {
 		stateObj.__dependantUIDs[prop] = [];
 		var type = schema[prop];
 		Object.defineProperty(stateObj, prop, {
-			// writable: true,
-			configurable: true,
 			get: function get() {
 				if (renderingStack.length) {
 					// We are in a render loop - record that view depends on stateObj[prop]
@@ -162,10 +195,9 @@ function newObjectState(schema, value) {
 				return stateObj.__value[prop];
 			},
 			set: function set(newPropValue) {
-				(0, _util.assert)(!renderingStack.length);
 				_sweepDependantsAndScheduleRender(stateObj, prop);
 				var propSchema = stateObj.__schema[prop];
-				stateObj.__value[prop] = newUIState(propSchema, newPropValue);
+				stateObj.__value[prop] = newUIState(propSchema, newPropValue, { stateObj: stateObj, prop: prop });
 			}
 		});
 	});
@@ -174,6 +206,7 @@ function newObjectState(schema, value) {
 
 var _scheduledRenders;
 function _sweepDependantsAndScheduleRender(stateObj, prop) {
+	(0, _util.assert)(!renderingStack.length);
 	if (!_scheduledRenders) {
 		_scheduledRenders = [];
 		setTimeout(_runScheduledRenders, 0);

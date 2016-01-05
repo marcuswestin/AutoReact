@@ -134,14 +134,6 @@ function newArrayState(arrayItemSchema, arr, parent) {
 	bubbleMutation(arr, 'sort', arrayItemSchema, parent, function(arr) {
 		return _.map((_, i) => i) // all indices
 	})
-	// TODO: Instead of preventing mutation, consider notifying parent UIState object of mutation.
-	// arr.push = preventMutation
-	// arr.pop = preventMutation
-	// arr.shift = preventMutation
-	// arr.unshift = preventMutation
-	// arr.splice = preventMutation
-	// arr.reverse = preventMutation
-	// arr.sort = preventMutation
 	return arr
 }
 
