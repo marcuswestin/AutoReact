@@ -1,15 +1,4 @@
-// Next: Performance tests
-// ??? Prevent UIState objects from being passed to components?
-// SHOULD WORK BETTER WITH FLUX:
-// 		A single store keeps app state.
-// 		A single UIState keeps UI state.
-// 		Store updates UIState
-// Try to bind a UIState value with an input field
-// Should the store perhaps grab a mutable copy of UIState?
-// 		Pro: clarity.
-// 		Con: prevents easy prototoyping without a store.
-// 		Pro: can seemingly explain the magic a bit?
-
+var autoreact = require('../src') // normally: require('autoreact')
 var ReactDOM = require('react-dom')
 var AutoReact = require('../src')
 var React = require('react')
@@ -46,15 +35,6 @@ var store = (function() {
 				Messages:[],
 				Name:name
 			})
-			// Alt 1:
-			// rooms.push({ LastMessage:null, Messages:[], Name:name })
-			// UIState.Rooms = rooms
-			
-			// Alt 2:
-			// // TODO: This works if preventMutation is removed.
-			// How can we make it work without `UIState.Rooms = UIState.Rooms`?
-			// UIState.Rooms.push({ LastMessage:null, Messages:[], Name:name })
-			// UIState.Rooms = UIState.Rooms
 		},
 		addMessage: function(text) {
 			UIState.Rooms[UIState.CurrentRoomIndex].Messages.push({
@@ -62,11 +42,6 @@ var store = (function() {
 				Text: text,
 				Time: new Date().getTime()
 			})
-			// Alt 1:
-			// rooms[UIState.CurrentRoomIndex].Messages.push({ From: UIState.Username, Text: text })
-			// UGLY
-			// UIState.Rooms[UIState.CurrentRoomIndex].Messages = rooms[UIState.CurrentRoomIndex].Messages
-			// Alt 2:
 		},
 		selectRoom: function(roomIndex) {
 			UIState.CurrentRoomIndex = roomIndex
