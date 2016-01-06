@@ -1,10 +1,9 @@
 var autoreact = require('../src') // normally: require('autoreact')
 var ReactDOM = require('react-dom')
-var AutoReact = require('../src')
 var React = require('react')
 var _ = require('lodash')
 
-var UIState = AutoReact.DeclareUIState({
+var UIState = autoreact.DeclareUIState({
 	Username: String,
 	CurrentRoomIndex: Number,
 	Rooms: Array({
@@ -50,7 +49,7 @@ var store = (function() {
 }())
 
 
-var AppView = AutoReact.View({
+var AppView = autoreact.ViewComponent({
 	componentDidMount: function() {
 		window.gApp = this
 	},
@@ -77,7 +76,7 @@ var AppView = AutoReact.View({
 	}
 })
 
-var RoomListView = AutoReact.View({
+var RoomListView = autoreact.ViewComponent({
 	render: function() {
 		return <div>
 			{_.map(UIState.Rooms, function(Room, roomIndex) {
@@ -87,7 +86,7 @@ var RoomListView = AutoReact.View({
 	}
 })
 
-var RoomView = AutoReact.View({
+var RoomView = autoreact.ViewComponent({
 	render: function() {
 		var Room = UIState.Rooms[this.props.roomIndex]
 		var isCurrent = (this.props.roomIndex == UIState.CurrentRoomIndex)
@@ -100,7 +99,7 @@ var RoomView = AutoReact.View({
 	}
 })
 
-var ChatView = AutoReact.View({
+var ChatView = autoreact.ViewComponent({
 	render: function() {
 		var Room = UIState.Rooms[UIState.CurrentRoomIndex]
 		if (!Room) {

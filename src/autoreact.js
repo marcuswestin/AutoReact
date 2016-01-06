@@ -9,8 +9,8 @@ export function DeclareUIState(schema) {
 	return newUIState(schema, {}, null)
 }
 
-export function View(args) {
-	return newView(args)
+export function ViewComponent(args) {
+	return newViewComponent(args)
 }
 
 // Views
@@ -19,7 +19,7 @@ export function View(args) {
 var viewComponentsByUid = {}
 var renderingStack = []
 var obsoleteViewUIDs = {} // Just use !viewComponentsByUID, no?
-function newView(args) {
+function newViewComponent(args) {
 	wrapFunction(args, 'componentWillMount', function(oldFn, args) {
 		this.__autoreactView = {}
 		return oldFn.apply(this, args)
