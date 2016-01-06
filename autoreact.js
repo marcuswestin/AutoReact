@@ -5,9 +5,11 @@ Object.defineProperty(exports, '__esModule', {
 	value: true
 });
 exports.DeclareUIState = DeclareUIState;
-exports.View = View;
+exports.ViewComponent = ViewComponent;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { 'default': obj };
+}
 
 var _react = require('react');
 
@@ -28,8 +30,8 @@ function DeclareUIState(schema) {
 	return newUIState(schema, {}, null);
 }
 
-function View(args) {
-	return newView(args);
+function ViewComponent(args) {
+	return newViewComponent(args);
 }
 
 // Views
@@ -38,7 +40,7 @@ function View(args) {
 var viewComponentsByUid = {};
 var renderingStack = [];
 var obsoleteViewUIDs = {}; // Just use !viewComponentsByUID, no?
-function newView(args) {
+function newViewComponent(args) {
 	(0, _util.wrapFunction)(args, 'componentWillMount', function (oldFn, args) {
 		this.__autoreactView = {};
 		return oldFn.apply(this, args);
@@ -263,9 +265,17 @@ Object.defineProperty(exports, '__esModule', {
   value: true
 });
 
-function _interopExportWildcard(obj, defaults) { var newObj = defaults({}, obj); delete newObj['default']; return newObj; }
+function _interopExportWildcard(obj, defaults) {
+  var newObj = defaults({}, obj);delete newObj['default'];return newObj;
+}
 
-function _defaults(obj, defaults) { var keys = Object.getOwnPropertyNames(defaults); for (var i = 0; i < keys.length; i++) { var key = keys[i]; var value = Object.getOwnPropertyDescriptor(defaults, key); if (value && value.configurable && obj[key] === undefined) { Object.defineProperty(obj, key, value); } } return obj; }
+function _defaults(obj, defaults) {
+  var keys = Object.getOwnPropertyNames(defaults);for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];var value = Object.getOwnPropertyDescriptor(defaults, key);if (value && value.configurable && obj[key] === undefined) {
+      Object.defineProperty(obj, key, value);
+    }
+  }return obj;
+}
 
 var _autoreact = require('./autoreact');
 
@@ -281,7 +291,9 @@ exports.Class = Class;
 exports.wrapFunction = wrapFunction;
 exports.assert = assert;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { 'default': obj };
+}
 
 var _lodash = require('lodash');
 
