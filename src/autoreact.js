@@ -1,69 +1,81 @@
 import React from 'react'
-import PureRenderMixin from 'react-addons-pure-render-mixin'
 import _ from 'lodash'
+import shallowCompare from 'react-addons-shallow-compare'
 
-import { Class, wrapFunction, assert } from './util'
 
-export function DeclareUIState(schema) {
+// Exports
+//////////
+
+export function declareUIState(schema) {
 	assert(_.isPlainObject(schema))
 	return newUIState(schema, {}, null)
 }
 
-export function ViewComponent(args) {
-	return newViewComponent(args)
+export class Component extends React.Component {
+	componentWillMount() {
+		this.__autoreactView = {}
+		wrapFunction(this, 'render', renderWrapper)
+		wrapFunction(this, 'componentWillUnmount', componentWillUnmountWrapper)
+		wrapShouldComponentUpdate(this)
+	}
+}
+
+export function createClass(args) {
+	wrapFunction(args, 'componentWillMount', componentWillMountWrapper)
+	wrapFunction(args, 'render', renderWrapper)
+	wrapFunction(args, 'componentWillUnmount', componentWillUnmountWrapper)
+	wrapShouldComponentUpdate(args)
+	
+	// _.defaults(args, { statics: {}, getInitialState:noStateFn, mixins: [] })
+	return _.assign(React.createFactory((isReactComponent(args) ? args : React.createClass(args))), args.statics)
+}
+
+export function wrapClass(cls) {
+	wrapFunction(cls.prototype, 'componentWillMount', componentWillMountWrapper)
+	wrapFunction(cls.prototype, 'render', renderWrapper)
+	wrapFunction(cls.prototype, 'componentWillUnmount', componentWillUnmountWrapper)
+	wrapShouldComponentUpdate(cls.prototype)
 }
 
 // Views
 ////////
 
+var noStateFn = function() { return {} }
 var viewComponentsByUid = {}
 var renderingStack = []
 var obsoleteViewUIDs = {} // Just use !viewComponentsByUID, no?
-function newViewComponent(args) {
-	wrapFunction(args, 'componentWillMount', function(oldFn, args) {
-		this.__autoreactView = {}
-		return oldFn.apply(this, args)
-	})
-	wrapFunction(args, 'render', function(oldFn, args) {
-		var view = this
-		renderingStack.push(view)
-		
-		// Remove all current state dependencies for this view
-		if (view.__autoreactView.uid) {
-			obsoleteViewUIDs[view.__autoreactView.uid] = true
-			delete viewComponentsByUid[view.__autoreactView.uid]
-		}
-		// Prepare for recording new state dependencies for this view
-		view.__autoreactView.uid = nextUid()
-		viewComponentsByUid[view.__autoreactView.uid] = view
-		
-		// Record new state dependencies
-		var result = oldFn.apply(this, args)
-		
-		// New state dependencies have been recorded. Sanity check rendering stack
-		var pop = renderingStack.pop()
-		if (pop != view) { throw new Error("Bad render order") }
-		
-		// All done!
-		return result
-	})
-	wrapFunction(args, 'componentWillUnmount', function(oldFn, args) {
-		var view = this
+
+function componentWillMountWrapper(oldFn, args) {
+	this.__autoreactView = {}
+	return oldFn.apply(this, args)
+}
+
+function componentWillUnmountWrapper(oldFn, args) {
+	var view = this
+	obsoleteViewUIDs[view.__autoreactView.uid] = true
+	delete viewComponentsByUid[view.__autoreactView.uid]
+	delete this.__autoreactView
+	return oldFn.apply(this, args)
+}
+
+function renderWrapper(oldFn, args) {
+	var view = this
+	renderingStack.push(view)
+	// Remove all current state dependencies for this view
+	if (view.__autoreactView.uid) {
 		obsoleteViewUIDs[view.__autoreactView.uid] = true
 		delete viewComponentsByUid[view.__autoreactView.uid]
-		delete this.__autoreactView
-		return oldFn.apply(this, args)
-	})
-	
-	_.defaults(args, {
-		statics: {},
-		getInitialState: function() { return {} },
-		mixins: []
-	})
-	if (!args.shouldComponentUpdate) {
-		args.mixins.push(PureRenderMixin)
 	}
-	return _.assign(React.createFactory(React.createClass(args)), args.statics)
+	// Prepare for recording new state dependencies for this view
+	view.__autoreactView.uid = nextUid()
+	viewComponentsByUid[view.__autoreactView.uid] = view
+	// Record new state dependencies
+	var result = oldFn.apply(this, args)
+	// New state dependencies have been recorded. Sanity check rendering stack
+	var pop = renderingStack.pop()
+	if (pop != view) { throw new Error("Bad render order") }
+	// All done!
+	return result
 }
 
 
@@ -213,8 +225,29 @@ function _sweepDependantsAndScheduleRender(stateObj, prop) {
 	}
 }
 
-// MISC UTIL
+// Misc util
 ////////////
+
+var noop = function(){}
+
+function wrapFunction(obj, fnName, wrapperFn) {
+	var oldFn = obj[fnName] || noop
+	obj[fnName] = function() {
+		return wrapperFn.call(this, oldFn, arguments)
+	}
+}
+
+function wrapShouldComponentUpdate(obj) {
+	if (obj.shouldComponentUpdate) { return }
+	obj.shouldComponentUpdate = function(nextProps, nextState) {
+		return shallowCompare(this, nextProps, nextState)
+	}
+}
+
+function assert(ok) {
+	if (ok) { return }
+	throw new Error('Assert failed')
+}
 
 function isAutoState(obj) {
 	return !!(obj && obj.__isAutoState)
@@ -222,6 +255,10 @@ function isAutoState(obj) {
 
 function isContainer(obj) {
 	return _.isArray(obj) || _.isPlainObject(obj)
+}
+
+function isReactComponent(obj) {
+	return !!obj.isReactComponent
 }
 
 nextUid._num = 0

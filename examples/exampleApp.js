@@ -1,65 +1,52 @@
-var tags = require('tags/bootstraps/react-dom-bootstrap')
-var autoreact = require('autoreact') // normally: require('autoreact')
+var autoreact = require('../src/autoreact') // normally: require('autoreact')
 var ReactDOM = require('react-dom')
 var React = require('react')
 var _ = require('lodash')
 
-
-// Load fonts, then start app:
-var Font = tags.LoadFont('Lato', 'n4', { italic: 'i4', bold: 'n7', boldItalic: 'i7' }, function onFontsLoaded() {
-	var viewport = document.body.appendChild(document.createElement('div'))
-	ReactDOM.render(AppView(UIState), viewport)	
-})
-
-// App
-//////
-
-tags.ExposeGlobals()
-var Input = tags.CreateViewFactory('input')
-var Button = tags.CreateViewFactory('button')
-
 // State
 ////////
 
-var UIState = autoreact.DeclareUIState({
-	Username: String,
-	CurrentRoomIndex: Number,
-	Rooms: Array({
-		Name: String,
-		LastMessage: String,
-		Messages: Array({
-			From: String,
-			Text: String,
-			Time: Number
+var uiState = autoreact.declareUIState({
+	username: String,
+	currentRoomIndex: Number,
+	rooms: Array({
+		name: String,
+		lastMessage: String,
+		messages: Array({
+			from: String,
+			text: String,
+			time: Number
 		})
 	})
 })
 
-var Store = (function() {
-	UIState.Rooms = []	
-	return {
-		setUsername: function(username) {
-			UIState.Username = username
-		},
-		addRoom: function(name) {
-			var newRoom = { LastMessage:null, Messages:[], Name:name }
-			UIState.Rooms.push(newRoom)
-		},
-		addMessage: function(text) {
-			var newMessage = { From: UIState.Username, Text: text, Time: new Date().getTime() }
-			UIState.Rooms[UIState.CurrentRoomIndex].Messages.push(newMessage)
-		},
-		selectRoom: function(roomIndex) {
-			UIState.CurrentRoomIndex = roomIndex
-		}
+var store = {
+	setUsername: function(username) {
+		uiState.username = username
+	},
+	addRoom: function(name) {
+		var newRoom = { lastMessage:null, messages:[], name:name }
+		uiState.rooms.push(newRoom)
+	},
+	addMessage: function(text) {
+		var newMessage = { from: uiState.username, text: text, time: new Date().getTime() }
+		uiState.rooms[uiState.currentRoomIndex].messages.push(newMessage)
+	},
+	selectRoom: function(roomIndex) {
+		uiState.currentRoomIndex = roomIndex
 	}
-}())
+}
+
+uiState.rooms = []
+store.addRoom("#General")
+store.addRoom("#CatGifs")
+store.addRoom("#Random")
 
 // UI
 /////
 
-var AppView = autoreact.ViewComponent({
-	componentDidMount: function() {
+var AppView = autoreact.createClass({
+	componentWillMount: function() {
 		window.gApp = this
 	},
 	render: function() {
@@ -70,7 +57,7 @@ var AppView = autoreact.ViewComponent({
 					Input({ id:'usernameInput' }, OnChange(this.setUsername))
 				),
 				Row(Style({ marginTop:6 }),
-					Button('Add Room', OnClick(this.addRoom)),
+					Button('Add room', OnClick(this.addRoom)),
 				),
 				RoomListView()
 			),
@@ -80,46 +67,46 @@ var AppView = autoreact.ViewComponent({
 		)
 	},
 	addRoom: function() {
-		Store.addRoom("A Room "+new Date().getTime())
+		store.addRoom("Another room "+new Date().getTime())
 	},
 	setUsername: function() {
-		Store.setUsername(document.getElementById('usernameInput').value)
+		store.setUsername(document.getElementById('usernameInput').value)
 	}
 })
 
-var RoomListView = autoreact.ViewComponent({
+var RoomListView = autoreact.createClass({
 	render: function() {
 		return Col(
-			_.map(UIState.Rooms, (Room, roomIndex) => 
-				RoomView({ key:Room.Name, roomIndex:roomIndex })
+			_.map(uiState.rooms, (room, roomIndex) => 
+				RoomView({ key:room.name, roomIndex:roomIndex })
 			)
 		)
 	}
 })
 
-var RoomView = autoreact.ViewComponent({
+var RoomView = autoreact.createClass({
 	render: function() {
-		var Room = UIState.Rooms[this.props.roomIndex]
-		var isCurrent = (this.props.roomIndex == UIState.CurrentRoomIndex)
+		var room = uiState.rooms[this.props.roomIndex]
+		var isCurrent = (this.props.roomIndex == uiState.currentRoomIndex)
 		return Row(Style({ padding:3 }), OnClick(this.selectRoom),
-			Row(Room.Name),
+			Row(room.name),
 			Row(isCurrent && ' >>')
 		)
 	},
 	selectRoom: function() {
-		Store.selectRoom(this.props.roomIndex)
+		store.selectRoom(this.props.roomIndex)
 	}
 })
 
-var ChatView = autoreact.ViewComponent({
+var ChatView = autoreact.createClass({
 	render: function() {
-		var Room = UIState.Rooms[UIState.CurrentRoomIndex]
-		if (!Room) {
+		var room = uiState.rooms[uiState.currentRoomIndex]
+		if (!room) {
 			return Col('No room selected')
 		}
-		return Col(Room.Name, OnClick(this.focus),
-			_.map(Room.Messages, (message) =>
-				Row({ key:message.Time }, Text(message.From + ': ' + message.Text))
+		return Col(room.name, OnClick(this.focus),
+			_.map(room.messages, (message) =>
+				Row({ key:message.time }, Text(message.from + ': ' + message.text))
 			),
 			Row(
 				Input({ key:'messageInput', id:'messageInput' }, OnKeyPress(this.onKeyPress))
@@ -131,11 +118,20 @@ var ChatView = autoreact.ViewComponent({
 		event.preventDefault()
 		var input = document.getElementById('messageInput')
 		if (!input.value.trim()) { return }
-		Store.addMessage(input.value.trim())
+		store.addMessage(input.value.trim())
 		input.value = ''
 		setTimeout(this.focus, 0)
 	},
 	focus: function() {
 		document.getElementById('messageInput').focus()
 	}
+})
+
+// Initialize tags, load fonts, and render app
+var tags = require('tags/bootstraps/react-dom-bootstrap')
+tags.ExposeGlobals()
+var Input = tags.CreateViewFactory('input')
+var Button = tags.CreateViewFactory('button')
+var Font = tags.LoadFont('Lato', 'n4', { italic: 'i4', bold: 'n7', boldItalic: 'i7' }, function onFontsLoaded() {
+	ReactDOM.render(AppView(), document.body.appendChild(document.createElement('div')))
 })
