@@ -2,7 +2,7 @@
   "name": "autoreact",
   "version": "0.0.9",
   "description": "Automatic state/view dependency management",
-  "main": "src/index.js",
+  "main": "src/autoreact.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
