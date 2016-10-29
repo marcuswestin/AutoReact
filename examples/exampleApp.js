@@ -6,7 +6,7 @@ var _ = require('lodash')
 // State
 ////////
 
-var uiState = AutoReact.declareUIState({
+var State = AutoReact.createState({
 	username: String,
 	currentRoomIndex: Number,
 	rooms: Array({
@@ -22,22 +22,22 @@ var uiState = AutoReact.declareUIState({
 
 var store = {
 	setUsername: function(username) {
-		uiState.username = username
+		State.username = username
 	},
 	addRoom: function(name) {
 		var newRoom = { lastMessage:null, messages:[], name:name }
-		uiState.rooms.push(newRoom)
+		State.rooms.push(newRoom)
 	},
 	addMessage: function(text) {
-		var newMessage = { from: uiState.username, text: text, time: new Date().getTime() }
-		uiState.rooms[uiState.currentRoomIndex].messages.push(newMessage)
+		var newMessage = { from: State.username, text: text, time: new Date().getTime() }
+		State.rooms[State.currentRoomIndex].messages.push(newMessage)
 	},
 	selectRoom: function(roomIndex) {
-		uiState.currentRoomIndex = roomIndex
+		State.currentRoomIndex = roomIndex
 	}
 }
 
-uiState.rooms = []
+State.rooms = []
 store.addRoom("#General")
 store.addRoom("#CatGifs")
 store.addRoom("#Random")
@@ -77,7 +77,7 @@ var AppView = AutoReact.createClass({
 var RoomListView = AutoReact.createClass({
 	render: function() {
 		return Col(
-			_.map(uiState.rooms, (room, roomIndex) => 
+			_.map(State.rooms, (room, roomIndex) => 
 				RoomView({ key:room.name, roomIndex:roomIndex })
 			)
 		)
@@ -86,8 +86,8 @@ var RoomListView = AutoReact.createClass({
 
 var RoomView = AutoReact.createClass({
 	render: function() {
-		var room = uiState.rooms[this.props.roomIndex]
-		var isCurrent = (this.props.roomIndex == uiState.currentRoomIndex)
+		var room = State.rooms[this.props.roomIndex]
+		var isCurrent = (this.props.roomIndex == State.currentRoomIndex)
 		return Row(Style({ padding:3 }), OnClick(this.selectRoom),
 			Row(room.name),
 			Row(isCurrent && ' >>')
@@ -100,7 +100,7 @@ var RoomView = AutoReact.createClass({
 
 var ChatView = AutoReact.createClass({
 	render: function() {
-		var room = uiState.rooms[uiState.currentRoomIndex]
+		var room = State.rooms[State.currentRoomIndex]
 		if (!room) {
 			return Col('No room selected')
 		}

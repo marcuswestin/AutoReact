@@ -6,7 +6,7 @@ import shallowCompare from 'react-addons-shallow-compare'
 // Exports
 //////////
 
-export function declareUIState(schema) {
+export function createState(schema) {
 	assert(_.isPlainObject(schema))
 	return newUIState(schema, {}, null)
 }
