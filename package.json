@@ -1,6 +1,6 @@
 {
   "name": "autoreact",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Automatic state/view dependency management",
   "main": "src/autoreact.js",
   "scripts": {
