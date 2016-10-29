@@ -13,7 +13,7 @@ export function declareUIState(schema) {
 
 export class Component extends React.Component {
 	componentWillMount() {
-		this.__autoreactView = {}
+		this.__AutoReactView = {}
 		wrapFunction(this, 'render', renderWrapper)
 		wrapFunction(this, 'componentWillUnmount', componentWillUnmountWrapper)
 		wrapShouldComponentUpdate(this)
@@ -46,15 +46,15 @@ var renderingStack = []
 var obsoleteViewUIDs = {} // Just use !viewComponentsByUID, no?
 
 function componentWillMountWrapper(oldFn, args) {
-	this.__autoreactView = {}
+	this.__AutoReactView = {}
 	return oldFn.apply(this, args)
 }
 
 function componentWillUnmountWrapper(oldFn, args) {
 	var view = this
-	obsoleteViewUIDs[view.__autoreactView.uid] = true
-	delete viewComponentsByUid[view.__autoreactView.uid]
-	delete this.__autoreactView
+	obsoleteViewUIDs[view.__AutoReactView.uid] = true
+	delete viewComponentsByUid[view.__AutoReactView.uid]
+	delete this.__AutoReactView
 	return oldFn.apply(this, args)
 }
 
@@ -62,13 +62,13 @@ function renderWrapper(oldFn, args) {
 	var view = this
 	renderingStack.push(view)
 	// Remove all current state dependencies for this view
-	if (view.__autoreactView.uid) {
-		obsoleteViewUIDs[view.__autoreactView.uid] = true
-		delete viewComponentsByUid[view.__autoreactView.uid]
+	if (view.__AutoReactView.uid) {
+		obsoleteViewUIDs[view.__AutoReactView.uid] = true
+		delete viewComponentsByUid[view.__AutoReactView.uid]
 	}
 	// Prepare for recording new state dependencies for this view
-	view.__autoreactView.uid = nextUid()
-	viewComponentsByUid[view.__autoreactView.uid] = view
+	view.__AutoReactView.uid = nextUid()
+	viewComponentsByUid[view.__AutoReactView.uid] = view
 	// Record new state dependencies
 	var result = oldFn.apply(this, args)
 	// New state dependencies have been recorded. Sanity check rendering stack
@@ -180,7 +180,7 @@ function newObjectState(schema, value) {
 			get: function() {
 				if (renderingStack.length) { // We are in a render loop - record that view depends on stateObj[prop]
 					var view = renderingStack[renderingStack.length - 1]
-					stateObj.__dependantUIDs[prop].push(view.__autoreactView.uid)
+					stateObj.__dependantUIDs[prop].push(view.__AutoReactView.uid)
 				}
 				return stateObj.__value[prop]
 			},

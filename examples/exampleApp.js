@@ -1,4 +1,4 @@
-var autoreact = require('../src/autoreact') // normally: require('autoreact')
+var AutoReact = require('../src/AutoReact') // normally: require('AutoReact')
 var ReactDOM = require('react-dom')
 var React = require('react')
 var _ = require('lodash')
@@ -6,7 +6,7 @@ var _ = require('lodash')
 // State
 ////////
 
-var uiState = autoreact.declareUIState({
+var uiState = AutoReact.declareUIState({
 	username: String,
 	currentRoomIndex: Number,
 	rooms: Array({
@@ -45,7 +45,7 @@ store.addRoom("#Random")
 // UI
 /////
 
-var AppView = autoreact.createClass({
+var AppView = AutoReact.createClass({
 	componentWillMount: function() {
 		window.gApp = this
 	},
@@ -74,7 +74,7 @@ var AppView = autoreact.createClass({
 	}
 })
 
-var RoomListView = autoreact.createClass({
+var RoomListView = AutoReact.createClass({
 	render: function() {
 		return Col(
 			_.map(uiState.rooms, (room, roomIndex) => 
@@ -84,7 +84,7 @@ var RoomListView = autoreact.createClass({
 	}
 })
 
-var RoomView = autoreact.createClass({
+var RoomView = AutoReact.createClass({
 	render: function() {
 		var room = uiState.rooms[this.props.roomIndex]
 		var isCurrent = (this.props.roomIndex == uiState.currentRoomIndex)
@@ -98,7 +98,7 @@ var RoomView = autoreact.createClass({
 	}
 })
 
-var ChatView = autoreact.createClass({
+var ChatView = AutoReact.createClass({
 	render: function() {
 		var room = uiState.rooms[uiState.currentRoomIndex]
 		if (!room) {

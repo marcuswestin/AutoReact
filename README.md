@@ -1,4 +1,4 @@
-autoreact
+AutoReact
 =========
 
 A library that infers UI state dependencies and automatically updates views.
@@ -13,9 +13,9 @@ Note the lack of `setState()` and `forceUpdate()`. Yet, it works.
 var ReactDOM = require('react-dom')
 var React = require('react')
 var _ = require('lodash')
-var autoreact = require('autoreact')
+var AutoReact = require('AutoReact')
 
-var UIState = autoreact.DeclareUIState({
+var UIState = AutoReact.DeclareUIState({
 	Username: String,
 	CurrentRoomIndex: Number,
 	Rooms: Array({
@@ -56,7 +56,7 @@ var store = (function() {
 }())
 
 
-var AppView = autoreact.View({
+var AppView = AutoReact.View({
 	componentDidMount: function() {
 		window.gApp = this
 	},
@@ -83,7 +83,7 @@ var AppView = autoreact.View({
 	}
 })
 
-var RoomListView = autoreact.View({
+var RoomListView = AutoReact.View({
 	render: function() {
 		return <div>
 			{_.map(UIState.Rooms, function(Room, roomIndex) {
@@ -93,7 +93,7 @@ var RoomListView = autoreact.View({
 	}
 })
 
-var RoomView = autoreact.View({
+var RoomView = AutoReact.View({
 	render: function() {
 		var Room = UIState.Rooms[this.props.roomIndex]
 		var isCurrent = (this.props.roomIndex == UIState.CurrentRoomIndex)
@@ -106,7 +106,7 @@ var RoomView = autoreact.View({
 	}
 })
 
-var ChatView = autoreact.View({
+var ChatView = AutoReact.View({
 	render: function() {
 		var Room = UIState.Rooms[UIState.CurrentRoomIndex]
 		if (!Room) {

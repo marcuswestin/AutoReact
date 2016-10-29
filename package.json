@@ -1,5 +1,5 @@
 {
-  "name": "autoreact",
+  "name": "AutoReact",
   "version": "0.0.7",
   "description": "Automatic state/view dependency management",
   "main": "src/index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/marcuswestin/autoreact.git"
+    "url": "git+https://github.com/marcuswestin/AutoReact.git"
   },
   "author": "Marcus Westin <narcvs@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/marcuswestin/autoreact/issues"
+    "url": "https://github.com/marcuswestin/AutoReact/issues"
   },
-  "homepage": "https://github.com/marcuswestin/autoreact#readme",
+  "homepage": "https://github.com/marcuswestin/AutoReact#readme",
   "devDependencies": {
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-react": "^6.16.0",
