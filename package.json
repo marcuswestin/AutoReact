@@ -1,5 +1,5 @@
 {
-  "name": "AutoReact",
+  "name": "autoreact",
   "version": "0.0.8",
   "description": "Automatic state/view dependency management",
   "main": "src/index.js",

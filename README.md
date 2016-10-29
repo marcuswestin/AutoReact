@@ -1,4 +1,4 @@
-AutoReact
+autoreact
 =========
 
 A library that infers UI state dependencies and automatically updates views.
@@ -13,7 +13,7 @@ Note the lack of `setState()` and `forceUpdate()`. Yet, it works.
 var ReactDOM = require('react-dom')
 var React = require('react')
 var _ = require('lodash')
-var AutoReact = require('AutoReact')
+var AutoReact = require('autoreact')
 
 var UIState = AutoReact.DeclareUIState({
 	Username: String,
