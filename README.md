@@ -4,148 +4,135 @@ autoreact
 A library that infers UI state dependencies and automatically updates views.
 
 
-Example
--------
+Example: Chat App
+-----------------
 
-Note the lack of `setState()` and `forceUpdate()`. Yet, it works.
+Note the lack of any `setState()` or `forceUpdate()`. Yet, it works.
 
 ```jsx
+var AutoReact = require('../src/autoreact') // normally: require('autoreact')
 var ReactDOM = require('react-dom')
 var React = require('react')
 var _ = require('lodash')
-var AutoReact = require('autoreact')
 
-var UIState = AutoReact.DeclareUIState({
-	Username: String,
-	CurrentRoomIndex: Number,
-	Rooms: Array({
-		Name: String,
-		LastMessage: String,
-		Messages: Array({
-			From: String,
-			Text: String,
-			Time: Number
+// State
+////////
+
+var uiState = AutoReact.declareUIState({
+	username: String,
+	currentRoomIndex: Number,
+	rooms: Array({
+		name: String,
+		lastMessage: String,
+		messages: Array({
+			from: String,
+			text: String,
+			time: Number
 		})
 	})
 })
 
-var store = (function() {
-	UIState.Rooms = []
-	return {
-		setUsername: function(username) {
-			UIState.Username = username
-		},
-		addRoom: function(name) {
-			UIState.Rooms.push({
-				LastMessage:null,
-				Messages:[],
-				Name:name
-			})
-		},
-		addMessage: function(text) {
-			UIState.Rooms[UIState.CurrentRoomIndex].Messages.push({
-				From: UIState.Username,
-				Text: text,
-				Time: new Date().getTime()
-			})
-		},
-		selectRoom: function(roomIndex) {
-			UIState.CurrentRoomIndex = roomIndex
-		}
-	}
-}())
-
-
-var AppView = AutoReact.View({
-	componentDidMount: function() {
-		window.gApp = this
+var store = {
+	setUsername: function(username) {
+		uiState.username = username
 	},
-	render: function() {
+	addRoom: function(name) {
+		var newRoom = { lastMessage:null, messages:[], name:name }
+		uiState.rooms.push(newRoom)
+	},
+	addMessage: function(text) {
+		var newMessage = { from: uiState.username, text: text, time: new Date().getTime() }
+		uiState.rooms[uiState.currentRoomIndex].messages.push(newMessage)
+	},
+	selectRoom: function(roomIndex) {
+		uiState.currentRoomIndex = roomIndex
+	}
+}
+
+uiState.rooms = []
+store.addRoom("#General")
+store.addRoom("#CatGifs")
+store.addRoom("#Random")
+
+// UI
+/////
+
+class AppView extends AutoReact.Component {
+	componentWillMount() {
+		super.componentWillMount()
+		window.gApp = this
+	}
+	render() {
 		return <div>
 			<div>{ this.renderControls() }</div>
-			<div>Username: { UIState.Username || '(none)' }</div>
+			<div>username: { uiState.username || '(none)' }</div>
 			<RoomListView/>
 			<ChatView/>
 		</div>
-	},
-	renderControls: function() {
+	}
+	renderControls() {
 		return <div>Controls:
 			<button onClick={this.addRoom}>Add Room</button>
-			<button onClick={this.setUsername}>Set Username</button>
+			<button onClick={this.setUsername}>Set username</button>
 			<input id='usernameInput' />
 		</div>
-	},
-	addRoom: function() {
-		store.addRoom("A Room "+new Date().getTime())
-	},
-	setUsername: function() {
+	}
+	addRoom() {
+		store.addRoom("Another Room "+new Date().getTime())
+	}
+	setUsername() {
 		store.setUsername(document.getElementById('usernameInput').value)
 	}
-})
+}
 
-var RoomListView = AutoReact.View({
-	render: function() {
+class RoomListView extends AutoReact.Component {
+	render() {
 		return <div>
-			{_.map(UIState.Rooms, function(Room, roomIndex) {
-				return <RoomView key={Room.Name} roomIndex={roomIndex} />
+			{_.map(uiState.rooms, function(Room, roomIndex) {
+				return <RoomView key={Room.name} roomIndex={roomIndex} />
 			})}
 		</div>
 	}
-})
+}
 
-var RoomView = AutoReact.View({
-	render: function() {
-		var Room = UIState.Rooms[this.props.roomIndex]
-		var isCurrent = (this.props.roomIndex == UIState.CurrentRoomIndex)
-		return <div onClick={this.selectRoom}>
-			{Room.Name} {isCurrent && ' (current)'}
+class RoomView extends AutoReact.Component {
+	render() {
+		var Room = uiState.rooms[this.props.roomIndex]
+		var isCurrent = (this.props.roomIndex == uiState.currentRoomIndex)
+		return <div onClick={this.selectRoom.bind(this)}>
+			{Room.name}
+			{Room.messages.length ? ' ('+Room.messages.length+')' : ''}
+			{isCurrent ? ' (current)' : ''} 
 		</div>
-	},
-	selectRoom: function() {
+	}
+	selectRoom() {
 		store.selectRoom(this.props.roomIndex)
 	}
-})
+}
 
-var ChatView = AutoReact.View({
-	render: function() {
-		var Room = UIState.Rooms[UIState.CurrentRoomIndex]
+class ChatView extends AutoReact.Component {
+	render() {
+		var Room = uiState.rooms[uiState.currentRoomIndex]
 		if (!Room) {
 			return <div>No room selected</div>
 		}
 		return <div>
-			{_.map(Room.Messages, (message) =>
-				<div key={message.Time}>
-					{message.From}: {message.Text}
+			{_.map(Room.messages, (message) =>
+				<div key={message.time}>
+					{message.from}: {message.text}
 				</div>
 			)}
 			<input id='messageInput' onKeyPress={this.onKeyPress} />
 		</div>
-	},
-	onKeyPress: function(event) {
+	}
+	onKeyPress(event) {
 		if (event.key != 'Enter') { return }
 		event.preventDefault()
 		var input = document.getElementById('messageInput')
 		store.addMessage(input.value.trim())
 		input.value = ''
 	}
-})
+}
 
-var viewport = document.body.appendChild(document.createElement('div'))
-ReactDOM.render(AppView(UIState), viewport)
+ReactDOM.render(<AppView />, document.body.appendChild(document.createElement('div')))
 ```
-
-
-Misc TODOs
-----------
-
-	- [ ] Performance tests
-	- [ ] ??? Prevent UIState objects from being passed to components
-	- [ ] SHOULD WORK BETTER WITH FLUX:
-		- [ ] 		A single store keeps app state.
-		- [ ] 		A single UIState keeps UI state.
-		- [ ] 		Store updates UIState
-	- [ ] Bind a UIState value with an input field
-	- [ ] Should the store perhaps grab a mutable copy of UIState?
-		- [ ] 		Pro: clarity.
-		- [ ] 		Con: prevents easy prototoyping without a store.
-		- [ ] 		Pro: can seemingly explain the magic a bit?
