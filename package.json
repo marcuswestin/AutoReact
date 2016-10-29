@@ -30,10 +30,5 @@
     "lodash": "^4.16.4",
     "react": "^15.3.2",
     "react-addons-shallow-compare": "^15.3.2"
-  },
-  "browserify": {
-    "transform": [
-      "babelify"
-    ]
   }
 }
