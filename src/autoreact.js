@@ -91,7 +91,10 @@ function newUIState(schema, value, parent) {
 		value = value.__value
 	}
 	
-	if (value === undefined || value === null) {
+	if (schema === null) {
+		return value
+	
+	} else if (value === undefined || value === null) {
 		// TODO: Add and enfore schema nullability?
 	
 	} else if (schema == String) {
