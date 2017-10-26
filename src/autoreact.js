@@ -1,7 +1,7 @@
 import React from 'react'
 import _ from 'lodash'
 import shallowCompare from 'react-addons-shallow-compare'
-
+import createReactClass from 'create-react-class'
 
 // Exports
 //////////
@@ -27,7 +27,7 @@ export function createClass(args) {
 	wrapShouldComponentUpdate(args)
 	
 	// _.defaults(args, { statics: {}, getInitialState:noStateFn, mixins: [] })
-	return _.assign(React.createFactory((isReactComponent(args) ? args : React.createClass(args))), args.statics)
+	return _.assign(React.createFactory((isReactComponent(args) ? args : createReactClass(args))), args.statics)
 }
 
 export function wrapClass(cls) {
