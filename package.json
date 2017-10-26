@@ -23,8 +23,7 @@
     "babelify": "^8.0.0",
     "browserify": "^14.5.0",
     "budo": "^10.0.4",
-    "react-dom": "^15.3.2",
-    "tags": "^1.1.4",
+    "tags": "^2.0.3",
     "uglifyify": "^4.0.4"
   },
   "dependencies": {

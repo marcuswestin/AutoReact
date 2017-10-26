@@ -1,6 +1,5 @@
 var autoreact = require('../src/autoreact') // normally: require('autoreact')
 var ReactDOM = require('react-dom')
-var React = require('react')
 var _ = require('lodash')
 
 // State

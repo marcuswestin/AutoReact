@@ -1,7 +1,12 @@
 var autoreact = require('../src/autoreact') // normally: require('autoreact')
-var ReactDOM = require('react-dom')
-var React = require('react')
+var tags = require('tags/react-dom')
 var _ = require('lodash')
+
+// Initialize tags, load fonts, and render app
+var { Button, Input, View, Text, Row, Col, Flex, OnKeyPress, OnClick, OnChange, Style, Background, Color } = tags
+var Font = tags.loadFont('Lato', 'n4', { italic: 'i4', bold: 'n7', boldItalic: 'i7' }, function onFontsLoaded() {
+	tags.render(AppView)
+})
 
 // State
 ////////
@@ -89,8 +94,9 @@ var RoomView = autoreact.createClass({
 		var room = State.rooms[this.props.roomIndex]
 		var isCurrent = (this.props.roomIndex == State.currentRoomIndex)
 		return Row(Style({ padding:3 }), OnClick(this.selectRoom),
-			Row(room.name),
-			Row(isCurrent && ' >>')
+			Row(room.name +
+				(isCurrent ? ' >>' : '')
+			)
 		)
 	},
 	selectRoom: function() {
@@ -125,13 +131,4 @@ var ChatView = autoreact.createClass({
 	focus: function() {
 		document.getElementById('messageInput').focus()
 	}
-})
-
-// Initialize tags, load fonts, and render app
-var tags = require('tags/bootstraps/react-dom-bootstrap')
-tags.ExposeGlobals()
-var Input = tags.CreateViewFactory('input')
-var Button = tags.CreateViewFactory('button')
-var Font = tags.LoadFont('Lato', 'n4', { italic: 'i4', bold: 'n7', boldItalic: 'i7' }, function onFontsLoaded() {
-	ReactDOM.render(AppView(), document.body.appendChild(document.createElement('div')))
 })
