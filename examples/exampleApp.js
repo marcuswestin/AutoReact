@@ -50,10 +50,7 @@ store.addRoom("#Random")
 // UI
 /////
 
-var AppView = autoreact.createClass({
-	componentWillMount: function() {
-		window.gApp = this
-	},
+var AppView = autoreact.createComponent({
 	render: function() {
 		return Row(Font(13),
 			Col(Flex(0.1, 0, 140), Style({ padding:10, background:'#eee', marginRight:10 }),
@@ -79,7 +76,7 @@ var AppView = autoreact.createClass({
 	}
 })
 
-var RoomListView = autoreact.createClass({
+var RoomListView = autoreact.createComponent({
 	render: function() {
 		return Col(
 			_.map(State.rooms, (room, roomIndex) => 
@@ -89,7 +86,7 @@ var RoomListView = autoreact.createClass({
 	}
 })
 
-var RoomView = autoreact.createClass({
+var RoomView = autoreact.createComponent({
 	render: function() {
 		var room = State.rooms[this.props.roomIndex]
 		var isCurrent = (this.props.roomIndex == State.currentRoomIndex)
@@ -104,7 +101,7 @@ var RoomView = autoreact.createClass({
 	}
 })
 
-var ChatView = autoreact.createClass({
+var ChatView = autoreact.createComponent({
 	render: function() {
 		var room = State.rooms[State.currentRoomIndex]
 		if (!room) {

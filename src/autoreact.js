@@ -20,7 +20,7 @@ export class Component extends React.Component {
 	}
 }
 
-export function createClass(args) {
+export function createComponent(args) {
 	wrapFunction(args, 'componentWillMount', componentWillMountWrapper)
 	wrapFunction(args, 'render', renderWrapper)
 	wrapFunction(args, 'componentWillUnmount', componentWillUnmountWrapper)
