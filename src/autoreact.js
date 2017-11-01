@@ -131,10 +131,10 @@ function newUIState(schema, value, parent) {
 		return newObjectState(schema, value, parent)
 	
 	} else {
-		log('Error: Unknown schema type')
-		log('Value:', value)
-		log('Schema:', schema)
-		log('Parent:', parent)
+		warn('Error: Unknown schema type')
+		warn('Value:', value)
+		warn('Schema:', schema)
+		warn('Parent:', parent)
 		throw new Error('Unknown schema type')
 	}
 }
@@ -293,8 +293,12 @@ function preventMutation() {
 	throw new Error('autoreact: Attempted to mutate UI state')
 }
 
-function log() {
-	if (typeof console != 'undefined' && console.log) {
-		console.log.apply(this, arguments)
+function warn() {
+	if (typeof console != 'undefined') {
+		if (console.warn) {
+			console.warn.apply(this, arguments)
+		} else if (console.log) {
+			console.log.apply(this, arguments)
+		}
 	}
 }
