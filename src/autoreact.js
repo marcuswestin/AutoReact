@@ -97,15 +97,15 @@ function newUIState(schema, value, parent) {
 	} else if (value === undefined || value === null) {
 		// TODO: Add and enfore schema nullability?
 	
-	} else if (schema == String) {
+	} else if (schema === String) {
 		assert(_.isString(value))
 		return value
 	
-	} else if (schema == Number) {
+	} else if (schema === Number) {
 		assert(_.isNumber(value))
 		return value
 	
-	} else if (schema == Function) {
+	} else if (schema === Function) {
 		assert(_.isFunction(value))
 		return value
 	
@@ -117,8 +117,12 @@ function newUIState(schema, value, parent) {
 	} else if (_.isPlainObject(schema)) {
 		assert(_.isPlainObject(value))
 		return newObjectState(schema, value, parent)
-
+	
 	} else {
+		log('Error: Unknown schema type')
+		log('Value:', value)
+		log('Schema:', schema)
+		log('Parent:', parent)
 		throw new Error('Unknown schema type')
 	}
 }
@@ -174,6 +178,9 @@ function newObjectState(schema, value) {
 	
 	stateObj.__value = {}
 	_.each(value, function(propValue, propName) {
+		if (schema[propName] == undefined) {
+			throw new Error("No such property in schema: "+propName)
+		}
 		stateObj.__value[propName] = newUIState(schema[propName], propValue, { stateObj:stateObj, prop:propName })
 	})
 	_.each(schema, function(_, prop) {
@@ -249,7 +256,7 @@ function wrapShouldComponentUpdate(obj) {
 
 function assert(ok) {
 	if (ok) { return }
-	throw new Error('Assert failed')
+	throw new Error('autoreact: assert failed')
 }
 
 function isAutoState(obj) {
@@ -271,5 +278,11 @@ function nextUid() {
 }
 
 function preventMutation() {
-	throw new Error('Attempted to mutate UI state')
+	throw new Error('autoreact: Attempted to mutate UI state')
+}
+
+function log() {
+	if (typeof console != 'undefined' && console.log) {
+		console.log.apply(this, arguments)
+	}
 }
