@@ -37,6 +37,11 @@ export function wrapClass(cls) {
 	wrapShouldComponentUpdate(cls.prototype)
 }
 
+var onStateUpdateFns = []
+export function onStateUpdate(fn) {
+	onStateUpdateFns.push(fn)
+}
+
 // Views
 ////////
 
@@ -213,7 +218,12 @@ function newObjectState(schema, value) {
 			}
 		})
 	})	
+	stateObj.toJSON = _objectStateToJSON
 	return stateObj
+}
+
+function _objectStateToJSON() {
+	return this.__value
 }
 
 var _scheduledRenders
@@ -221,6 +231,7 @@ function _sweepDependantsAndScheduleRender(stateObj, prop) {
 	assert(!renderingStack.length)
 	if (!_scheduledRenders) {
 		_scheduledRenders = []
+		setTimeout(_notifyStateUpdateFns, 0)
 		setTimeout(_runScheduledRenders, 0)
 	}
 	_scheduledRenders.push(stateObj.__dependantUIDs[prop])
@@ -300,5 +311,11 @@ function warn() {
 		} else if (console.log) {
 			console.log.apply(this, arguments)
 		}
+	}
+}
+
+function _notifyStateUpdateFns() {
+	for (var i=0; i<onStateUpdateFns.length; i++) {
+		onStateUpdateFns[i]()
 	}
 }
