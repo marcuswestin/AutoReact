@@ -109,6 +109,18 @@ function newUIState(schema, value, parent) {
 		assert(_.isFunction(value))
 		return value
 	
+	} else if (schema === Boolean) {
+		assert(_.isBoolean(value))
+		return value
+	
+	} else if (schema === Object) {
+		assert(_.isObject(value))
+		return value
+	
+	} else if (schema === Array) {
+		assert(_.isArray(value))
+		return value
+	
 	} else if (_.isArray(schema)) {
 		assert(_.isArray(value))
 		var arrayItemSchema = schema[0]
