@@ -1,17 +1,17 @@
-import React from 'react'
-import _ from 'lodash'
-import shallowCompare from 'react-addons-shallow-compare'
-import createReactClass from 'create-react-class'
+var React = require('react')
+var _ = require('lodash')
+var shallowCompare = require('react-addons-shallow-compare')
+var createReactClass = require('create-react-class')
 
 // Exports
 //////////
 
-export function createState(schema) {
+function createState(schema) {
 	assert(_.isPlainObject(schema))
 	return newUIState(schema, {}, null)
 }
 
-export class Component extends React.Component {
+class Component extends React.Component {
 	componentWillMount() {
 		this.__autoreactView = {}
 		wrapFunction(this, 'render', renderWrapper)
@@ -20,7 +20,7 @@ export class Component extends React.Component {
 	}
 }
 
-export function createComponent(args) {
+function createComponent(args) {
 	wrapFunction(args, 'componentWillMount', componentWillMountWrapper)
 	wrapFunction(args, 'render', renderWrapper)
 	wrapFunction(args, 'componentWillUnmount', componentWillUnmountWrapper)
@@ -30,7 +30,7 @@ export function createComponent(args) {
 	return _.assign(React.createFactory((isReactComponent(args) ? args : createReactClass(args))), args.statics)
 }
 
-export function wrapClass(cls) {
+function wrapClass(cls) {
 	wrapFunction(cls.prototype, 'componentWillMount', componentWillMountWrapper)
 	wrapFunction(cls.prototype, 'render', renderWrapper)
 	wrapFunction(cls.prototype, 'componentWillUnmount', componentWillUnmountWrapper)
@@ -38,9 +38,11 @@ export function wrapClass(cls) {
 }
 
 var onStateUpdateFns = []
-export function onStateUpdate(fn) {
+function onStateUpdate(fn) {
 	onStateUpdateFns.push(fn)
 }
+
+module.exports = { createState, Component, createComponent, wrapClass, onStateUpdate }
 
 // Views
 ////////
